@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
-const Mixed = Schema.Types.Mixed
+const {ObjectId,Mixed} = Schema.Types.Mixed
 
 const MovieSchema = new Schema({
     doubanId:{
@@ -9,7 +9,7 @@ const MovieSchema = new Schema({
     },
     category:[{
         type:ObjectId,
-        ref:'Movie'
+        ref:'Category'
     }],
     rate: Number,
     title: String,
@@ -38,8 +38,8 @@ const MovieSchema = new Schema({
         }
     }
 })
-
-MovieSchema.pre('save',next=>{
+//保存前，回调函数可以继续调用中间件
+MovieSchema.pre('save',function(next){
     if(this.isNew){
         this.meta.createdAt = this.meta.updatedAt = Date.now()
     }else{
@@ -47,5 +47,5 @@ MovieSchema.pre('save',next=>{
     }
     next()
 })
-
+//发布生成model
 mongoose.model('Movie ',MovieSchema)

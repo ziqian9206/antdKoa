@@ -1,8 +1,10 @@
 const mongoose = require('mongoose')
 const db = 'mongodb://localhost/antdkoa'
 const glob = require('glob')
+const {resolve} = require('path')
 mongoose.Promise = global.Promise
 exports.initSchema = ()=>{
+    //glob 匹配规则
     glob.sync(resolve(__dirname,'./schema','**/*.js')).forEach(require)
 }
 exports.connect = () => {

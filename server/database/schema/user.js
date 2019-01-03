@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 
 const SALT_WORK_FACTOR = 10
+//最大登陆失败次数
 const MAX_LOGIN_ATTEMPTS = 5
 const LOCK_TIME = 2 * 60 * 60 * 1000
 const Schema = mongoose.Schema
@@ -12,9 +13,15 @@ const UserSchema = new Schema({
     type: String,
     default: 'user'
   },
-  username: String,
+  username:{
+    unique:true,
+    type:String
+  },
   email: String,
-  password: String,
+  password:{
+    unique:true,
+    type:String,
+  },
   hashed_password: String,
   loginAttempts: {
     type: Number,
@@ -34,7 +41,7 @@ const UserSchema = new Schema({
   }
 })
 
-
+//账户是否被锁定
 UserSchema.virtual('isLocked').get(function () {
   return !!(this.lockUntil && this.lockUntil > Date.now())
 })
@@ -52,9 +59,9 @@ UserSchema.pre('save', function (next) {
 
 UserSchema.pre('save', function (next) {
   let user = this
-
+//密码哦是否有改动
   if (!user.isModified('password')) return next()
-
+//genSalt加盐，权重值越大复杂度越高，回调hash加密
   bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
     if (err) return next(err)
 
@@ -68,6 +75,7 @@ UserSchema.pre('save', function (next) {
 })
 
 UserSchema.methods = {
+  //比较密码，是否成功登陆
   comparePassword: function (_password, password) {
     return new Promise((resolve, reject) => {
       bcrypt.compare(_password, password, function (err, isMatch) {
@@ -99,7 +107,7 @@ UserSchema.methods = {
             loginAttempts: 1
           }
         }
-
+//尝试登陆次数多于次数
         if (that.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS && !that.isLocked) {
           updates.$set = {
             lockUntil: Date.now() + LOCK_TIME
