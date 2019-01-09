@@ -7,7 +7,6 @@ const mongoose = require('mongoose')
 ;(async ()=>{
     await connect()
     initSchema()
-    require('./tasks/movie')
 })()
 app.use(views(resolve(__dirname,'./views'),{
     extension:'pug'

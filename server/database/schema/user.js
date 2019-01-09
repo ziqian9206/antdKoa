@@ -59,7 +59,7 @@ UserSchema.pre('save', function (next) {
 
 UserSchema.pre('save', function (next) {
   let user = this
-//密码哦是否有改动
+//密码哦是否有改动,没改变下一环节
   if (!user.isModified('password')) return next()
 //genSalt加盐，权重值越大复杂度越高，回调hash加密
   bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
@@ -78,6 +78,7 @@ UserSchema.methods = {
   //比较密码，是否成功登陆
   comparePassword: function (_password, password) {
     return new Promise((resolve, reject) => {
+      //bcrypt.compare方法比较
       bcrypt.compare(_password, password, function (err, isMatch) {
         if (!err) resolve(isMatch)
         else reject(err)
