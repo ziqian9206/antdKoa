@@ -1,13 +1,16 @@
+//粗数据拆解
+
 // http://api.douban.com/v2/movie/subject/1764796
 const rp = require('request-promise-native')
 const mongoose = require('mongoose')
 const Movie = mongoose.model('Movie')
+const Category = mongoose.model('Category')
 
 async function fetchMovie (item) {
   const url = `http://api.douban.com/v2/movie/${item.doubanId}`
   console.log(url)
   let res = await rp(url)
-
+//res是字符串 
   try {
     res = JSON.parse(res)
   } catch (err) {
@@ -18,7 +21,7 @@ async function fetchMovie (item) {
   return res
 }
 
-;(async () => {
+;(async () => { 
   let movies = await Movie.find({
     $or: [
       {summary: {$exists: false}},
@@ -28,7 +31,7 @@ async function fetchMovie (item) {
     ]
   }).exec()
 
-  for (let i = 0; i < movies.length; i ++) {
+  for (let i = 0; i < [movies[0]].length; i ++) {
     let movie = movies[i]
     let movieData = await fetchMovie(movie)
 
@@ -42,27 +45,50 @@ async function fetchMovie (item) {
 
       if (movieData.attrs) {
         movie.movieTypes = movieData.attrs.movie_type || []
-
+        movie.year = movieData.attrs.year[0] || 2500
+        for(let i = 0; i<movie.movieTypes.length; i++){
+          let item = movie.movieTypes[i]
+          // movie.movieTypes.forEach(async item =>{
+            let cat = await Category.findOne({
+              name:item
+            })
+            if(!cat){
+              cat = new Category({
+                name:item,
+                movies:[movie._id]
+              })
+            }else{
+              if(cat.movies.indexOf(movie._id) === -1){
+                cat.movies.push(movie._id)
+              }
+            }
+            await cat.save()
+            if(!movie.category){
+              movie.category.push(cat._id)
+            }else{
+              if(movie.category.indexOf(cat._id)===-1){
+                movie.category.push(cat._id)
+              }
+            }
+        }
         let dates = movieData.attrs.pubdate || []
         let pubdates = []
-
-        dates.map(item => {
-          if (item && item.split('(').length > 0) {
-            let parts = item.split('(')
+        dates.map(item=>{
+          if(item&&item.split('(').length > 0){
+            let parts =item.split('(')
             let date = parts[0]
             let country = '未知'
 
-            if (parts[1]) {
+            if(parts[1]){
               country = parts[1].split(')')[0]
             }
 
             pubdates.push({
-              date: new Date(date),
+              date:new Date(data),
               country
             })
           }
         })
-
         movie.pubdate = pubdates
       }
 

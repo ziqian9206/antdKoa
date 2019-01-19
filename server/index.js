@@ -4,9 +4,11 @@ const views = require('koa-views')
 const {resolve} = require('path')
 const {connect,initSchema} = require('./database/init')
 const mongoose = require('mongoose')
+const router = require('./routes')
 ;(async ()=>{
     await connect()
     initSchema()
+    require("./task/movie")
 })()
 app.use(views(resolve(__dirname,'./views'),{
     extension:'pug'
@@ -24,6 +26,12 @@ app.use(views(resolve(__dirname,'./views'),{
 //throw抛出错误
 //ctx.response.body = fs.createReadStream('./demos/template.html');
 //ctx.request.path可以获取用户请求的路径，
+
+
+app.use(router.routes())
+    .use(router.allowedMethods())
+
+//中间件
 app.use(async(ctx,next)=>{
     console.log('log1')//1
     await next();

@@ -27,12 +27,12 @@ const Movie = mongoose.model('Movie')
 
   child.on('message', data => {
     let result = data.result
-
+    //遍历结果，数据来了再await
     result.forEach(async (item) => {
       let movie = await Movie.findOne({
         doubanId: item.doubanId
       }).exec()
-
+      //没有存储，就传入
       if (!movie) {
         movie = new Movie(item)
         await movie.save()

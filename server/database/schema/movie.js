@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
-const {ObjectId,Mixed} = Schema.Types.Mixed
+const {Mixed} = Schema.Types.Mixed
+const {ObjectId,} = Schema.Types.ObjectId,
 //传入对象，描述模型需要的字段
 const MovieSchema = new Schema({
     doubanId:{
@@ -39,7 +40,7 @@ const MovieSchema = new Schema({
         }
     }
 })
-//保存前，回调函数可以继续调用中间件，是否是新数据
+//保存前，回调函数可以继续调用中间件，是否是新数据，不能用箭头函数
 MovieSchema.pre('save',function(next){
     if(this.isNew){
         this.meta.createdAt = this.meta.updatedAt = Date.now()
