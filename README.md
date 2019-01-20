@@ -13,3 +13,6 @@ ssh-keygen -t rsa -b 4096 -C "ziqian9206@aliyun.com"
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_rsa
 cat /root/.ssh/id_rsa.pub
+
+
+pm2 deploy deply.yaml production setup
