@@ -4,7 +4,7 @@ const views = require('koa-views')
 const {resolve} = require('path')
 const {connect,initSchema} = require('./database/init')
 const R = require('ramda')
-const MIDDLEWARES = ['router']
+const MIDDLEWARES = ['router','parcel','common']
 const mongoose = require('mongoose')
 const router = require('./routes/movie')
 

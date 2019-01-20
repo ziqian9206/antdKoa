@@ -6,7 +6,7 @@ const Router = require('koa-router')
 const {resolve} = require('path')
 //唯一，一旦创建不会修改
 const symbolPrefix = Symbol('prefix') 
-
+const R = require('ramda')
 const isArray = c =>_.isArray(c)?c:[c]
 const routerMap = new Map()
 export class Route{
@@ -74,3 +74,79 @@ export const all = path => router({
     method:'all',
     path:path
 })
+const changeToArr = R.unless(
+    R.is(isArray),
+    R.of
+)
+
+const convert = middleware =>(target,key,descriptor)=>{
+    target[key] = R.compose(
+        R.concat(
+          changeToArr(middleware)
+        ),
+        changeToArr
+      )(target[key])
+      return descriptor
+}
+
+export const auth = convert(async (ctx,next)=>{
+    if(!ctx.session.user){
+        return (
+            ctx.body = {
+                success:false,
+                code:401,
+                err:'登录信息失效，重新登录'
+            }
+        )
+    }
+    await next()
+})
+
+export const admin =role=> convert(async (ctx,next)=>{
+    const {role} = ctx.session.user
+    const rule = {
+        admin:[1,4,5],
+        superAdmin:[1,2,3,4]
+    }
+    if(!role||role!=='admin'){
+        return (
+            ctx.body = {
+                success:false,
+                code:403,
+                err:'无权限'
+            }
+        )
+    }
+    await next()
+})
+
+
+/**
+ * @Required({
+ *   body: ['name', 'password']
+ * })
+ */
+export const Required = paramsObj => convert(async (ctx, next) => {
+    let errs = []
+  
+    R.forEachObjIndexed(
+      (val, key) => {
+        errs = errs.concat(
+          R.filter(
+            name => !R.has(name, ctx.request[key])
+          )(val)
+        )
+      }
+    )(paramsObj)
+  
+    if (!R.isEmpty(errs)) {
+      return (
+        ctx.body = {
+          success: false,
+          errCode: 412,
+          errMsg: `${R.join(', ', errs)} is required`
+        }
+      )
+    }
+    await next()
+  })

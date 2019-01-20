@@ -76,7 +76,7 @@ export default class Content extends Component {
       visible: false
     })
   }
-
+//跳转详情页
    _jumeToDetail = () => {
     const { url } = this.props
     url && window.open(url)
