@@ -1,14 +1,32 @@
 const Koa = require('koa')
-const app = new Koa()
+
 const views = require('koa-views')
 const {resolve} = require('path')
 const {connect,initSchema} = require('./database/init')
+const R = require('ramda')
+const MIDDLEWARES = ['router']
 const mongoose = require('mongoose')
-const router = require('./routes')
+const router = require('./routes/movie')
+
+//遍历中间件，并处理，函数式编程
+const useMiddlewares=(app)=>{
+    R.map(R.compose(
+        R.forEachObjIndexed(
+            initWith => initWith(app)
+        ),
+        require,
+        name = resolve(__dirname,'./middlewares/${name}')
+    ))(MIDDLEWARES)
+}
+
 ;(async ()=>{
     await connect()
     initSchema()
+    //await initAdmin()
     require("./task/movie")
+    const app = new Koa()
+    await useMiddlewares(app)
+    app.listen(4455)
 })()
 app.use(views(resolve(__dirname,'./views'),{
     extension:'pug'
@@ -27,36 +45,35 @@ app.use(views(resolve(__dirname,'./views'),{
 //ctx.response.body = fs.createReadStream('./demos/template.html');
 //ctx.request.path可以获取用户请求的路径，
 
+// app.use(router.routes())
+//     .use(router.allowedMethods())
 
-app.use(router.routes())
-    .use(router.allowedMethods())
+// //中间件
+// app.use(async(ctx,next)=>{
+//     console.log('log1')//1
+//     await next();
+//     const rt = ctx.response.get('X-Response-Time')//响应时间
+//     console.log(`${ctx.method} ${ctx.url} - ${rt}`);//5
+// })
 
-//中间件
-app.use(async(ctx,next)=>{
-    console.log('log1')//1
-    await next();
-    const rt = ctx.response.get('X-Response-Time')//响应时间
-    console.log(`${ctx.method} ${ctx.url} - ${rt}`);//5
-})
+// app.use(async(ctx,next)=>{
+//     const start = Date.now();
+//     console.log('response1')//2
+//     await next();
+//     const ms = Date.now() - start;
+//     ctx.set('X-Response-Time',`${ms}ms`)
+//     console.log('response2')//4
+// })
 
-app.use(async(ctx,next)=>{
-    const start = Date.now();
-    console.log('response1')//2
-    await next();
-    const ms = Date.now() - start;
-    ctx.set('X-Response-Time',`${ms}ms`)
-    console.log('response2')//4
-})
+// app.use(async(ctx,next)=>{
+//     console.log('render')//3
+//     await ctx.render('index',{
+//         you:'wzq',
+//         me:'zqw'
+//     })
+// })
 
-app.use(async(ctx,next)=>{
-    console.log('render')//3
-    await ctx.render('index',{
-        you:'wzq',
-        me:'zqw'
-    })
-})
-
-app.listen(4455,console.log("开启服务"))
+// app.listen(4455,console.log("开启服务"))
 
 //request
 // ctx.header
