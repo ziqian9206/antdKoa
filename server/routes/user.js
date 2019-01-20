@@ -1,4 +1,3 @@
-import { assertModuleDeclaration } from '../../../../../Library/Caches/typescript/3.2/node_modules/@types/babel-types';
 
 const Router = require('koa-router')
 const router = new Router()
